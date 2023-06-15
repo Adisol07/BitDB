@@ -69,7 +69,8 @@
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "BitDB >= 1.0.0"
+      "BitDB >= 1.0.0",
+      "Newtonsoft.Json >= 13.0.3"
     ]
   },
   "packageFolders": {
@@ -78,11 +79,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/BitDB.ServerApp.csproj",
-      "projectName": "BitDB.ServerApp",
-      "projectPath": "/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/BitDB.ServerApp.csproj",
+      "projectUniqueName": "/Users/adambestajovsky/Projects/BitDB/DemoClient/DemoClient.csproj",
+      "projectName": "DemoClient",
+      "projectPath": "/Users/adambestajovsky/Projects/BitDB/DemoClient/DemoClient.csproj",
       "packagesPath": "/Users/adambestajovsky/.nuget/packages/",
-      "outputPath": "/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/obj/",
+      "outputPath": "/Users/adambestajovsky/Projects/BitDB/DemoClient/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/adambestajovsky/.nuget/NuGet/NuGet.Config"
@@ -114,6 +115,12 @@
     "frameworks": {
       "net7.0": {
         "targetAlias": "net7.0",
+        "dependencies": {
+          "Newtonsoft.Json": {
+            "target": "Package",
+            "version": "[13.0.3, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",

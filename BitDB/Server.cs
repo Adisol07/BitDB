@@ -1,8 +1,11 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace BitDB;
 
@@ -25,15 +28,19 @@ public class Server
     public void Start()
     {
         LoadAll();
+        Console.WriteLine("Server is loaded!"); 
         server = new UdpClient(Port);
         this.canListen = true;
         listen();
-    }
+    } 
     public void LoadAll()
     {
+        Databases.Clear();
         var files = Directory.GetFiles(DataFolder);
         foreach(var file in files)
         {
+            if (file.EndsWith(".json") == false)
+                continue;
             LoadDatabase(file);
         }
     }
@@ -42,7 +49,8 @@ public class Server
         if (File.Exists(dbFile) == false)
             throw new Exception("Database file does not exist");
 
-        Databases.Add(JsonConvert.DeserializeObject<Database>(dbFile));
+        Database database = JsonConvert.DeserializeObject<Database>(File.ReadAllText(dbFile));
+        Databases.Add(database);
     }
     public void SaveData(string dataFolder)
     {
@@ -61,48 +69,57 @@ public class Server
                 IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
                 byte[] receivedData = server.Receive(ref clientEndpoint);
                 string receivedMessage = Encoding.ASCII.GetString(receivedData);
-
-                //Execute:
+                Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: " + receivedMessage);
+                Response response = new Response("Could not fetch request"); 
+                                                                                                        
+                //Execute:  
                 string[] words = receivedMessage.Split(' ');
                 if (words[0] == "MAKE")
                 {
+                    //string pattern = "\"([a-z]+?)\"";
+                    string pattern = "'(.*?)'";
                     if (words[1].ToLower() == "database")
                     {
-                        int start = receivedMessage.IndexOf('"') + 1;
-                        int end = receivedMessage.LastIndexOf('"', start);
-                        string result = receivedMessage.Substring(start, end - start);
+                        MatchCollection matches = Regex.Matches(receivedMessage, pattern);
 
-                        Database database = new Database(result);
+                        Database database = new Database(matches[0].Value.Replace("'", ""));
                         Databases.Add(database);
 
+                        response = new Response("Successfully created database");
+
                         SaveData(DataFolder);
+                        LoadAll();
                     }
                     else if (words[1].ToLower() == "document")
                     {
-                        int start = receivedMessage.IndexOf('"') + 1;
-                        int end = receivedMessage.LastIndexOf('"', start);
-                        string result = receivedMessage.Substring(start, end - start);
+                        MatchCollection matches = Regex.Matches(receivedMessage, pattern);
 
-                        string[] path = result.Split('/');
+                        string[] path = matches[0].Value.Replace("'", "").Split('/');
                         Document document = new Document(path[1]);
+                        response = new Response("Could not find subitem");
+                        int dbIndex = 0;
                         foreach(Database db in Databases)
                         {
                             if (db.Name == path[0])
                             {
-                                db.Documents.Add(document);
+                                Databases[dbIndex].Documents.Add(document);
+                                response = new Response("Successfully created document");
+                                SaveData(DataFolder);
                                 break;
                             }
+
+                            dbIndex++;
                         }
-                        SaveData(DataFolder);
                     }
                     else if (words[1].ToLower() == "field")
                     {
-                        int start = receivedMessage.IndexOf('"') + 1;
-                        int end = receivedMessage.LastIndexOf('"', start);
-                        string result = receivedMessage.Substring(start, end - start);
+                        MatchCollection matches = Regex.Matches(receivedMessage, pattern);
 
-                        string[] path = result.Split('/');
+                        string[] path = matches[0].Value.Replace("'", "").Split('/');
                         Field field = new Field(path[2], null);
+                        response = new Response("Could not find subitem");
+                        int dbIndex = 0;
+                        int docIndex = 0;
                         foreach(Database db in Databases)
                         {
                             if (db.Name == path[0])
@@ -110,23 +127,35 @@ public class Server
                                 foreach(Document doc in db.Documents)
                                 {
                                     if (doc.Name == path[1])
-                                    {
-                                        doc.Fields.Add(field);
+                                    {   
+                                        Databases[dbIndex].Documents[docIndex].Fields.Add(field);
+                                        response = new Response("Successfuly created field");
+                                        SaveData(DataFolder);
                                         break;
                                     }
+
+                                    docIndex++;
                                 }
                                 break;
                             }
+
+                            dbIndex++;
                         }
-                        SaveData(DataFolder);
+                    }
+                    else
+                    {
+                        response = new Response("Invalid make type");
                     }
                 }
+                else
+                {
+                    response = new Response("Invalid command");
+                }
 
-                string responseMessage = "";
-                byte[] responseData = Encoding.ASCII.GetBytes(responseMessage);
+                byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
                 server.Send(responseData, responseData.Length, clientEndpoint);
             }
-        }
+        }   
         catch (SocketException ex)
         {
             Console.WriteLine("Error: " + ex.Message);
