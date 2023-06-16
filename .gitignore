@@ -1,1 +1,4 @@
 /.vscode
+/Debug
+/release
+.DS_Store
