@@ -6,17 +6,12 @@ using Newtonsoft.Json;
 
 namespace BitDB;
 
-public class Client
+public static class Client
 {
-    private UdpClient? client;
-
-    public Client()
-    { 
-        client = new UdpClient();
-    }
-
-    public Response SendCommand(string command, string ipaddress, int port)
+    public static Response SendCommand(string command, ConnectionArgs connection) => SendCommand(command, connection.Address, connection.Port);
+    public static Response SendCommand(string command, string ipaddress, int port)
     {
+        UdpClient? client = new UdpClient();
         client.Connect(ipaddress, port);
 
         client.Send(System.Text.Encoding.UTF8.GetBytes(command));
@@ -26,5 +21,18 @@ public class Client
         string receivedMessage = Encoding.ASCII.GetString(receivedData);
 
         return JsonConvert.DeserializeObject<Response>(receivedMessage);
+    }
+}
+public class ConnectionArgs
+{
+    public string Address { get; set; } = "127.0.0.1";
+    public int Port { get; set; } = 44;
+
+    public ConnectionArgs()
+    { }
+    public ConnectionArgs(string addr, int port)
+    {
+        this.Address = addr;
+        this.Port = port;
     }
 }

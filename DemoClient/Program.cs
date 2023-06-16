@@ -7,8 +7,8 @@ internal class Program
 {
     public static void Main(string[] args)
     {
-        Client client = new Client();
-        Console.WriteLine(client.SendCommand("MAKE document 'test/testik'", "127.0.0.1", 44).Message);
+        ConnectionArgs connection = new ConnectionArgs("127.0.0.1", 44);
+        Console.WriteLine(Client.SendCommand("GET namebyvalue 'hustyyy'", connection).ToString());
         Console.ReadLine();
     }
 }

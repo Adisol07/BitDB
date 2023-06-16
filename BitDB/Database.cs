@@ -3,11 +3,12 @@ using Newtonsoft.Json;
 
 namespace BitDB;
 
+[Serializable]
 public class Database
 {
-    public string? ID { get; }
-    public string? Name { get; set; }
-    public List<Document>? Documents { get; set; } = new List<Document>();
+    public string ID { get; set; }
+    public string Name { get; set; }
+    public List<Document> Documents { get; set; } = new List<Document>();
 
     public Database()
     { }

@@ -2,11 +2,12 @@ using System;
 
 namespace BitDB;
 
+[Serializable]
 public class Document
 {
-    public string? ID { get; }
-    public string? Name { get; }
-    public List<Field>? Fields { get; set; } = new List<Field>();
+    public string ID { get; set; }
+    public string Name { get; set; }
+    public List<Field> Fields { get; set; } = new List<Field>();
 
     public Document()
     { }

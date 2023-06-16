@@ -28,20 +28,21 @@ public class Server
     public void Start()
     {
         LoadAll();
-        Console.WriteLine("Server is loaded!"); 
+        Console.WriteLine("Server is loaded!");
         server = new UdpClient(Port);
         this.canListen = true;
         listen();
-    } 
+    }
     public void LoadAll()
     {
         Databases.Clear();
         var files = Directory.GetFiles(DataFolder);
-        foreach(var file in files)
+        foreach (var file in files)
         {
-            if (file.EndsWith(".json") == false)
-                continue;
-            LoadDatabase(file);
+            if (file.EndsWith(".json") && Path.GetFileNameWithoutExtension(file) != "")
+            {
+                LoadDatabase(file);
+            }
         }
     }
     public void LoadDatabase(string dbFile)
@@ -54,9 +55,10 @@ public class Server
     }
     public void SaveData(string dataFolder)
     {
-        foreach(Database db in Databases)
+        foreach (Database db in Databases)
         {
-            File.WriteAllText(dataFolder + "/" + db.ID + ".json", JsonConvert.SerializeObject(db));
+            string json = JsonConvert.SerializeObject(db);
+            File.WriteAllText(dataFolder + "/" + db.ID + ".json", json);
         }
     }
 
@@ -70,14 +72,12 @@ public class Server
                 byte[] receivedData = server.Receive(ref clientEndpoint);
                 string receivedMessage = Encoding.ASCII.GetString(receivedData);
                 Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: " + receivedMessage);
-                Response response = new Response("Could not fetch request"); 
-                                                                                                        
-                //Execute:  
+                Response response = new Response("Could not fetch request");
+
                 string[] words = receivedMessage.Split(' ');
-                if (words[0] == "MAKE")
+                string pattern = "'(.*?)'";
+                if (words[0] == "MAKE" || words[0] == "CREATE")
                 {
-                    //string pattern = "\"([a-z]+?)\"";
-                    string pattern = "'(.*?)'";
                     if (words[1].ToLower() == "database")
                     {
                         MatchCollection matches = Regex.Matches(receivedMessage, pattern);
@@ -88,7 +88,6 @@ public class Server
                         response = new Response("Successfully created database");
 
                         SaveData(DataFolder);
-                        LoadAll();
                     }
                     else if (words[1].ToLower() == "document")
                     {
@@ -98,7 +97,7 @@ public class Server
                         Document document = new Document(path[1]);
                         response = new Response("Could not find subitem");
                         int dbIndex = 0;
-                        foreach(Database db in Databases)
+                        foreach (Database db in Databases)
                         {
                             if (db.Name == path[0])
                             {
@@ -120,16 +119,16 @@ public class Server
                         response = new Response("Could not find subitem");
                         int dbIndex = 0;
                         int docIndex = 0;
-                        foreach(Database db in Databases)
+                        foreach (Database db in Databases)
                         {
                             if (db.Name == path[0])
                             {
-                                foreach(Document doc in db.Documents)
+                                foreach (Document doc in db.Documents)
                                 {
                                     if (doc.Name == path[1])
-                                    {   
+                                    {
                                         Databases[dbIndex].Documents[docIndex].Fields.Add(field);
-                                        response = new Response("Successfuly created field");
+                                        response = new Response("Successfully created field");
                                         SaveData(DataFolder);
                                         break;
                                     }
@@ -147,15 +146,259 @@ public class Server
                         response = new Response("Invalid make type");
                     }
                 }
+                else if (words[0] == "SET" || words[0] == "CHANGE" || words[0] == "INSERT")
+                {
+                    MatchCollection matches = Regex.Matches(receivedMessage, pattern);
+                    response = new Response("Could not find subitem");
+                    string[] path = matches[0].Value.Replace("'", "").Split('/');
+                    string val = matches[1].Value.Replace("'", "");
+
+                    if (path.Length == 1)
+                    {
+                        int dbIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                if (words[1].ToLower() == "name")
+                                {
+                                    Databases[dbIndex].Name = val;
+                                    response = new Response("Successfully renamed database");
+                                }
+                                else
+                                {
+                                    response = new Response("Invalid set type");
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else if (path.Length == 2)
+                    {
+                        int dbIndex = 0;
+                        int docIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                foreach (Document doc in db.Documents)
+                                {
+                                    if (doc.Name == path[1])
+                                    {
+                                        if (words[1].ToLower() == "name")
+                                        {
+                                            Databases[dbIndex].Documents[docIndex].Name = val;
+                                            response = new Response("Successfully renamed document");
+                                        }
+                                        else
+                                        {
+                                            response = new Response("Invalid set type");
+                                        }
+                                        break;
+                                    }
+
+                                    docIndex++;
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else if (path.Length == 3)
+                    {
+                        int dbIndex = 0;
+                        int docIndex = 0;
+                        int fieldIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                foreach (Document doc in db.Documents)
+                                {
+                                    if (doc.Name == path[1])
+                                    {
+                                        foreach (Field f in doc.Fields)
+                                        {
+                                            if (f.Name == path[2])
+                                            {
+                                                if (words[1].ToLower() == "name")
+                                                {
+                                                    Databases[dbIndex].Documents[docIndex].Fields[fieldIndex].Name = val;
+                                                    response = new Response("Successfully renamed field");
+                                                }
+                                                else if (words[1].ToLower() == "value")
+                                                {
+                                                    Databases[dbIndex].Documents[docIndex].Fields[fieldIndex].Value = val;
+                                                    response = new Response("Successfully changed field value");
+                                                }
+                                                else
+                                                {
+                                                    response = new Response("Invalid set type");
+                                                }
+                                                break;
+                                            }
+
+                                            fieldIndex++;
+                                        }
+                                        break;
+                                    }
+
+                                    docIndex++;
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else
+                    {
+                        response = new Response("Invalid path length");
+                    }
+
+                    SaveData(DataFolder);
+                }
+                else if (words[0] == "GET" || words[0] == "FETCH" || words[0] == "GRAB")
+                {
+                    MatchCollection matches = Regex.Matches(receivedMessage, pattern);
+                    response = new Response("Could not find subitem");
+                    string[] path = matches[0].Value.Replace("'", "").Split('/');
+
+                    if (words[1].ToLower() == "namebyvalue")
+                    {
+                        response = new Response("Could not find field by value");
+                        foreach (Database db in Databases)
+                        {
+                            foreach (Document doc in db.Documents)
+                            {
+                                foreach (Field f in doc.Fields)
+                                {
+                                    if (f.Value == matches[0].Value.Replace("'", ""))
+                                    {
+                                        response = new Response("Successfully fetched field name by value", f.Name);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (path.Length == 1 && (words[1] == "name" || words[1] == "value"))
+                    {
+                        int dbIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                if (words[1].ToLower() == "name")
+                                {
+                                    response = new Response("Successfully fetched database name", db.Name);
+                                }
+                                else
+                                {
+                                    response = new Response("Invalid set type");
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else if (path.Length == 2 && (words[1] == "name" || words[1] == "value"))
+                    {
+                        int dbIndex = 0;
+                        int docIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                foreach (Document doc in db.Documents)
+                                {
+                                    if (doc.Name == path[1])
+                                    {
+                                        if (words[1].ToLower() == "name")
+                                        {
+                                            response = new Response("Successfully fetched document name", doc.Name);
+                                        }
+                                        else
+                                        {
+                                            response = new Response("Invalid set type");
+                                        }
+                                        break;
+                                    }
+
+                                    docIndex++;
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else if (path.Length == 3 && (words[1] == "name" || words[1] == "value"))
+                    {
+                        int dbIndex = 0;
+                        int docIndex = 0;
+                        int fieldIndex = 0;
+                        foreach (Database db in Databases)
+                        {
+                            if (db.Name == path[0])
+                            {
+                                foreach (Document doc in db.Documents)
+                                {
+                                    if (doc.Name == path[1])
+                                    {
+                                        foreach (Field f in doc.Fields)
+                                        {
+                                            if (f.Name == path[2])
+                                            {
+                                                if (words[1].ToLower() == "name")
+                                                {
+                                                    response = new Response("Successfully fetched field name", f.Name);
+                                                }
+                                                else if (words[1].ToLower() == "value")
+                                                {
+                                                    response = new Response("Successfully fetched field value", f.Value);
+                                                }
+                                                else
+                                                {
+                                                    response = new Response("Invalid set type");
+                                                }
+                                                break;
+                                            }
+
+                                            fieldIndex++;
+                                        }
+                                        break;
+                                    }
+
+                                    docIndex++;
+                                }
+                                break;
+                            }
+
+                            dbIndex++;
+                        }
+                    }
+                    else if (words[1] == "name" || words[1] == "value")
+                    {
+                        response = new Response("Invalid path length");
+                    }
+                }
                 else
+
                 {
                     response = new Response("Invalid command");
                 }
+                LoadAll();
 
                 byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
                 server.Send(responseData, responseData.Length, clientEndpoint);
             }
-        }   
+        }
         catch (SocketException ex)
         {
             Console.WriteLine("Error: " + ex.Message);
