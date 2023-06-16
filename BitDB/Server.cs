@@ -401,7 +401,6 @@ public class Server
         }
         catch (SocketException ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Error: " + ex.Message);
         }
         finally
