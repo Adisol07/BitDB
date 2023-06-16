@@ -1,0 +1,12 @@
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/release/net7.0/BitDB.deps.json
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/release/net7.0/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/release/net7.0/BitDB.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.csproj.AssemblyReference.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.GeneratedMSBuildEditorConfig.editorconfig
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.AssemblyInfoInputs.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.AssemblyInfo.cs
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.csproj.CoreCompileInputs.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/refint/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/BitDB.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/release/net7.0/ref/BitDB.dll
