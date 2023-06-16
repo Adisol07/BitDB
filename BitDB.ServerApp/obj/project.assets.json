@@ -29,7 +29,7 @@
         }
       }
     },
-    "net7.0/ubuntu.16.04-x64": {
+    "net7.0/win-x64": {
       "Newtonsoft.Json/13.0.3": {
         "type": "package",
         "compile": {
@@ -155,15 +155,15 @@
         "warn": true,
         "downloadDependencies": [
           {
-            "name": "Microsoft.AspNetCore.App.Runtime.linux-x64",
+            "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
             "version": "[7.0.7, 7.0.7]"
           },
           {
-            "name": "Microsoft.NETCore.App.Host.linux-x64",
+            "name": "Microsoft.NETCore.App.Host.win-x64",
             "version": "[7.0.7, 7.0.7]"
           },
           {
-            "name": "Microsoft.NETCore.App.Runtime.linux-x64",
+            "name": "Microsoft.NETCore.App.Runtime.win-x64",
             "version": "[7.0.7, 7.0.7]"
           }
         ],
@@ -176,7 +176,7 @@
       }
     },
     "runtimes": {
-      "ubuntu.16.04-x64": {
+      "win-x64": {
         "#import": []
       }
     }
