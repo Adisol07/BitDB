@@ -1,4 +1,6 @@
 /.vscode
-/Debug
-/release
-.DS_Store
+/BitDB/bin/Debug
+/BitDB/bin/Release
+/BitDB.ServerApp/bin/Debug
+/BitDB.ServerApp/bin/Release
+*.DS_Store

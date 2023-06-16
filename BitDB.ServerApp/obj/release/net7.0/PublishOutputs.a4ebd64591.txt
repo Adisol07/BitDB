@@ -1,0 +1,8 @@
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.ServerApp
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.ServerApp.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.ServerApp.deps.json
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.ServerApp.runtimeconfig.json
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.ServerApp.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/Newtonsoft.Json.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB.ServerApp/bin/Release/net7.0/publish/BitDB.pdb

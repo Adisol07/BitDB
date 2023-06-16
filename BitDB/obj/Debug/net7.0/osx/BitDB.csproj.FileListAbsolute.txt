@@ -1,0 +1,12 @@
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/osx/BitDB.deps.json
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/osx/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/osx/BitDB.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.csproj.AssemblyReference.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.GeneratedMSBuildEditorConfig.editorconfig
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.AssemblyInfoInputs.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.AssemblyInfo.cs
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.csproj.CoreCompileInputs.cache
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/refint/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/BitDB.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB/obj/Debug/net7.0/osx/ref/BitDB.dll

@@ -1,0 +1,4 @@
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/publish/BitDB.dll
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/publish/BitDB.deps.json
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/publish/BitDB.pdb
+/Users/adambestajovsky/Projects/BitDB/BitDB/bin/Debug/net7.0/publish/Newtonsoft.Json.dll
