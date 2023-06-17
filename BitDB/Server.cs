@@ -18,13 +18,15 @@ public class Server
     public int Port { get; }
     public string DataFolder { get; }
     public string Password { get; }
+    public int MaxRequestLenght { get; set; }
 
-    public Server(string dataFolder = "./db", int port = 44, string password = "")
+    public Server(string dataFolder = "./db", int port = 44, string password = "", int maxRequestLenght = 1024)
     {
         this.DataFolder = dataFolder;
         this.Port = port;
         this.Password = password;
         this.Databases = new List<Database>();
+        this.MaxRequestLenght = maxRequestLenght;
     }
 
     public void Start()
@@ -87,7 +89,13 @@ public class Server
             {
                 MatchCollection matches = Regex.Matches(cmd, pattern);
 
-                Database database = new Database(matches[0].Value.Replace("'", ""));
+                string name = matches[0].Value.Replace("'", "");
+                if (name.Length > 100)
+                {
+                    response = new Response("Name of the database is too long (>100)");
+                    return response;
+                }
+                Database database = new Database(name);
                 Databases.Add(database);
 
                 response = new Response("Successfully created database");
@@ -99,7 +107,13 @@ public class Server
                 MatchCollection matches = Regex.Matches(cmd, pattern);
 
                 string[] path = matches[0].Value.Replace("'", "").Split('/');
-                Document document = new Document(path[1]);
+                string name = path[1];
+                if (name.Length > 100)
+                {
+                    response = new Response("Name of the document is too long (>100)");
+                    return response;
+                }
+                Document document = new Document(name);
                 response = new Response("Could not find subitem");
                 int dbIndex = 0;
                 foreach (Database db in Databases)
@@ -120,7 +134,23 @@ public class Server
                 MatchCollection matches = Regex.Matches(cmd, pattern);
 
                 string[] path = matches[0].Value.Replace("'", "").Split('/');
-                Field field = new Field(path[2], null);
+                string name = path[2];
+                if (name.Length > 100)
+                {
+                    response = new Response("Name of the field is too long (>100)");
+                    return response;
+                }
+                string value = null;
+                if (matches.Count == 2)
+                {
+                    value = matches[1].Value.Replace("'", "");
+                    if (value.Length > MaxRequestLenght)
+                    {
+                        response = new Response("Value for new field is too long (>" + MaxRequestLenght + ") - Creation of field was denied");
+                        return response;
+                    }
+                }
+                Field field = new Field(name, value);
                 response = new Response("Could not find subitem");
                 int dbIndex = 0;
                 int docIndex = 0;
@@ -158,6 +188,16 @@ public class Server
             response = new Response("Could not find subitem");
             string[] path = matches[0].Value.Replace("'", "").Split('/');
             string val = matches[1].Value.Replace("'", "");
+            if (words[1].ToLower() == "name" && val.Length > 100)
+            {
+                response = new Response("New name is too long (>100)");
+                return response;
+            }
+            else if (words[1].ToLower() == "value" && val.Length > MaxRequestLenght)
+            {
+                response = new Response("New value is too long (>" + MaxRequestLenght + ")");
+                return response;
+            }
 
             if (path.Length == 1)
             {
@@ -292,7 +332,7 @@ public class Server
                 }
             }
 
-            if (path.Length == 1 && (words[1] == "name" || words[1] == "value"))
+            if (path.Length == 1 && (words[1].ToLower() == "name" || words[1].ToLower() == "value" || words[1].ToLower() == "json" || words[1].ToLower() == "id"))
             {
                 int dbIndex = 0;
                 foreach (Database db in Databases)
@@ -302,6 +342,14 @@ public class Server
                         if (words[1].ToLower() == "name")
                         {
                             response = new Response("Successfully fetched database name", db.Name);
+                        }
+                        else if (words[1].ToLower() == "id")
+                        {
+                            response = new Response("Successfully fetched database ID", db.ID);
+                        }
+                        else if (words[1].ToLower() == "value" || words[1].ToLower() == "json")
+                        {
+                            response = new Response("Successfully fetched database json-value", JsonConvert.SerializeObject(db));
                         }
                         else
                         {
@@ -313,7 +361,7 @@ public class Server
                     dbIndex++;
                 }
             }
-            else if (path.Length == 2 && (words[1] == "name" || words[1] == "value"))
+            else if (path.Length == 2 && (words[1].ToLower() == "name" || words[1].ToLower() == "value" || words[1].ToLower() == "json" || words[1].ToLower() == "id"))
             {
                 int dbIndex = 0;
                 int docIndex = 0;
@@ -328,6 +376,14 @@ public class Server
                                 if (words[1].ToLower() == "name")
                                 {
                                     response = new Response("Successfully fetched document name", doc.Name);
+                                }
+                                else if (words[1].ToLower() == "id")
+                                {
+                                    response = new Response("Successfully fetched document ID", doc.ID);
+                                }
+                                else if (words[1].ToLower() == "value" || words[1].ToLower() == "json")
+                                {
+                                    response = new Response("Successfully fetched document json-value", JsonConvert.SerializeObject(doc));
                                 }
                                 else
                                 {
@@ -344,7 +400,7 @@ public class Server
                     dbIndex++;
                 }
             }
-            else if (path.Length == 3 && (words[1] == "name" || words[1] == "value"))
+            else if (path.Length == 3 && (words[1].ToLower() == "name" || words[1].ToLower() == "value" || words[1].ToLower() == "json" || words[1].ToLower() == "id"))
             {
                 int dbIndex = 0;
                 int docIndex = 0;
@@ -365,9 +421,17 @@ public class Server
                                         {
                                             response = new Response("Successfully fetched field name", f.Name);
                                         }
+                                        else if (words[1].ToLower() == "id")
+                                        {
+                                            response = new Response("Successfully fetched field ID", f.ID);
+                                        }
                                         else if (words[1].ToLower() == "value")
                                         {
                                             response = new Response("Successfully fetched field value", f.Value);
+                                        }
+                                        else if (words[1].ToLower() == "json")
+                                        {
+                                            response = new Response("Successfully fetched field json-value", JsonConvert.SerializeObject(f));
                                         }
                                         else
                                         {
@@ -389,9 +453,9 @@ public class Server
                     dbIndex++;
                 }
             }
-            else if (words[1] == "name" || words[1] == "value")
+            else
             {
-                response = new Response("Invalid path length");
+                response = new Response("Invalid path length or argument");
             }
         }
         else if (words[0] == "DEL" || words[0] == "REM" || words[0] == "DELETE" || words[0] == "REMOVE")
@@ -399,7 +463,7 @@ public class Server
             MatchCollection matches = Regex.Matches(cmd, pattern);
             response = new Response("Could not find subitem");
             string[] path = matches[0].Value.Replace("'", "").Split('/');
-            
+
             if (path.Length == 1)
             {
                 int dbIndex = 0;
@@ -513,23 +577,22 @@ public class Server
 
     private void listen()
     {
-        try
+        while (this.canListen)
         {
-            while (this.canListen)
+            IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
+            byte[] receivedData = server.Receive(ref clientEndpoint);
+            string receivedMessage = Encoding.ASCII.GetString(receivedData);
+            Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + receivedMessage + "'");
+            string password = "";
+            string finalMessage = receivedMessage;
+            if (receivedMessage.StartsWith("#"))
             {
-                IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
-                byte[] receivedData = server.Receive(ref clientEndpoint);
-                string receivedMessage = Encoding.ASCII.GetString(receivedData);
-                Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + receivedMessage + "'");
-                
-                string password = "";
-                string finalMessage = receivedMessage;
-                if (receivedMessage.StartsWith("#"))
-                {
-                    MatchCollection matches = Regex.Matches(receivedMessage, "#(.*?)#");
-                    password = matches[0].Value.Replace("#", "");
-                    finalMessage = receivedMessage.Remove(0, matches[0].Value.Length);
-                }
+                MatchCollection matches = Regex.Matches(receivedMessage, "#(.*?)#");
+                password = matches[0].Value.Replace("#", "");
+                finalMessage = receivedMessage.Remove(0, matches[0].Value.Length);
+            }
+            try
+            {
                 if (finalMessage.StartsWith("{") && finalMessage.EndsWith("}"))
                 {
                     QueryResponse response = new QueryResponse("Invalid query");
@@ -576,15 +639,23 @@ public class Server
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
             }
-        }
-        catch (SocketException ex)
-        {
-            Console.WriteLine("[LISTEN]: Error: '" + ex.Message + "'");
-        }
-        finally
-        {
-            server?.Close();
-            Console.WriteLine("Server is stopped!");
+            catch (Exception ex)
+            {
+                Console.WriteLine("[LISTEN_Error]: '" + ex.Message + "'");
+
+                if (finalMessage.StartsWith("{") && finalMessage.EndsWith("}"))
+                {
+                    QueryResponse response = new QueryResponse("An error occurred while fetching your request");
+                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    server.Send(responseData, responseData.Length, clientEndpoint);
+                }
+                else
+                {
+                    Response response = new Response("An error occurred while fetching your request");
+                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    server.Send(responseData, responseData.Length, clientEndpoint);
+                }
+            }
         }
     }
 }

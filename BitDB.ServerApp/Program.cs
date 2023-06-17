@@ -26,6 +26,8 @@ internal class Program
             var srvPort = Console.ReadLine();
             Console.Write("Data folder(def: ./db): ");
             var dataFolder = Console.ReadLine();
+            Console.Write("Max Request Lenght(def: 1024(1KB)): ");
+            var maxRequestLenght = Console.ReadLine();
 
             config.Name = srvName;
             int port = 44;
@@ -43,6 +45,10 @@ internal class Program
             else
                 config.DataFolder = dataFolder;
             config.Password = srvPassword;
+            int mrl = 0;
+            if (maxRequestLenght != "" && int.TryParse(maxRequestLenght, out mrl))
+                config.MaxRequestLenght = mrl;
+                
 
             File.WriteAllText("./config.json", JsonConvert.SerializeObject(config));
         }
@@ -50,7 +56,7 @@ internal class Program
         if (Directory.Exists(config.DataFolder) == false)
             Directory.CreateDirectory(config.DataFolder);
 
-        Server server = new Server(config.DataFolder, config.Port, config.Password);
+        Server server = new Server(config.DataFolder, config.Port, config.Password, config.MaxRequestLenght);
         Task handleKeys = new Task(() => { // Work in progress
             string command = "";
             while (true)
