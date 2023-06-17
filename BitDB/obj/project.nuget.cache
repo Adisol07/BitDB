@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "f+C1dSYUM1PNN3OkhRZqXWUL+GZ2k3lPphTBC+ep7QJMH4Oqtc2a4m102xHfpzm2WyHMWPlutNRlYytuHbrDbg==",
+  "dgSpecHash": "vxNc9qNKlFVLxkb1aWHzpIvJT2Pn7UMWa5XhTpF4A7qwrQOXKmBw+bn+eGQrSctHCBX84DvFU7xbcj3wHh5exA==",
   "success": true,
   "projectFilePath": "/Users/adambestajovsky/Projects/BitDB/BitDB/BitDB.csproj",
   "expectedPackageFiles": [
-    "/Users/adambestajovsky/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512"
+    "/Users/adambestajovsky/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
+    "/Users/adambestajovsky/.nuget/packages/microsoft.netcore.app.runtime.win-x64/7.0.7/microsoft.netcore.app.runtime.win-x64.7.0.7.nupkg.sha512",
+    "/Users/adambestajovsky/.nuget/packages/microsoft.aspnetcore.app.runtime.win-x64/7.0.7/microsoft.aspnetcore.app.runtime.win-x64.7.0.7.nupkg.sha512"
   ],
   "logs": []
 }
