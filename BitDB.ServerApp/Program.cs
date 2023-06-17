@@ -57,29 +57,7 @@ internal class Program
             Directory.CreateDirectory(config.DataFolder);
 
         Server server = new Server(config.DataFolder, config.Port, config.Password, config.MaxRequestLenght);
-        Task handleKeys = new Task(() => { // Work in progress
-            string command = "";
-            while (true)
-            {
-                var key = Console.ReadKey().Key;
-                if (key == ConsoleKey.Escape)
-                {
-                    server.Stop();
-                    break;
-                }
-                else if (key == ConsoleKey.Enter)
-                {
-                    Console.WriteLine(server.HandleCommand(command).ToString());
-                    command = "";
-                }
-                else
-                {
-                    command += ((char)key);
-                }
-            }
-        });
         Console.Title = "[BitDB Server]: '" + config.Name + "'";
-        handleKeys.Start();
         server.Start();
 
         Console.ForegroundColor = ConsoleColor.Yellow;

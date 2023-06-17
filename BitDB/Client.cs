@@ -19,13 +19,13 @@ public static class Client
             Console.WriteLine("Connected to server: " + ipaddress + ":" + port.ToString());
 
         string json = JsonConvert.SerializeObject(query);
-        client.Send(System.Text.Encoding.UTF8.GetBytes("#" + password + "#" + json));
+        client.Send(System.Text.Encoding.Unicode.GetBytes("#" + password + "#" + json));
         if (Flags.Contains("logall") || Flags.Contains("logsend"))
             Console.WriteLine("Sended: " + query.ID + " to server: " + ipaddress + ":" + port.ToString());
 
         IPEndPoint serverEndpoint = new IPEndPoint(IPAddress.Any, 0);
         byte[] receivedData = client.Receive(ref serverEndpoint);
-        string receivedMessage = Encoding.ASCII.GetString(receivedData);
+        string receivedMessage = Encoding.Unicode.GetString(receivedData);
         if (Flags.Contains("logall") || Flags.Contains("logreceived"))
             Console.WriteLine("Recieved: " + receivedMessage + " from server: " + ipaddress + ":" + port.ToString());
 
@@ -40,13 +40,13 @@ public static class Client
         if (Flags.Contains("logall") || Flags.Contains("logconnection"))
             Console.WriteLine("Connected to server: " + ipaddress + ":" + port.ToString());
 
-        client.Send(System.Text.Encoding.UTF8.GetBytes("#" + password + "#" + command));
+        client.Send(System.Text.Encoding.Unicode.GetBytes("#" + password + "#" + command));
         if (Flags.Contains("logall") || Flags.Contains("logsend"))
             Console.WriteLine("Sended: " + command + " to server: " + ipaddress + ":" + port.ToString());
 
         IPEndPoint serverEndpoint = new IPEndPoint(IPAddress.Any, 0);
         byte[] receivedData = client.Receive(ref serverEndpoint);
-        string receivedMessage = Encoding.ASCII.GetString(receivedData);
+        string receivedMessage = Encoding.Unicode.GetString(receivedData);
         if (Flags.Contains("logall") || Flags.Contains("logreceived"))
             Console.WriteLine("Recieved: " + receivedMessage + " from server: " + ipaddress + ":" + port.ToString());
 

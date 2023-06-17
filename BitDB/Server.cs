@@ -581,7 +581,7 @@ public class Server
         {
             IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] receivedData = server.Receive(ref clientEndpoint);
-            string receivedMessage = Encoding.ASCII.GetString(receivedData);
+            string receivedMessage = Encoding.Unicode.GetString(receivedData);
             Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + receivedMessage + "'");
             string password = "";
             string finalMessage = receivedMessage;
@@ -617,7 +617,7 @@ public class Server
                     }
 
                     response.RequestDuration = query.Time - DateTime.Now;
-                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
                 else
@@ -635,7 +635,7 @@ public class Server
                         response.Message = "Invalid password";
                     }
 
-                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
             }
@@ -646,13 +646,13 @@ public class Server
                 if (finalMessage.StartsWith("{") && finalMessage.EndsWith("}"))
                 {
                     QueryResponse response = new QueryResponse("An error occurred while fetching your request");
-                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
                 else
                 {
                     Response response = new Response("An error occurred while fetching your request");
-                    byte[] responseData = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
             }
