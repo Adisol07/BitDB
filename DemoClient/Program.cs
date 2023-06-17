@@ -7,8 +7,14 @@ internal class Program
 {
     public static void Main(string[] args)
     {
-        ConnectionArgs connection = new ConnectionArgs("209.38.192.39", 44);
-        Console.WriteLine(Client.SendCommand("GET value 'test/testovacidoc/fff'", connection).ToString());
-        Console.ReadLine();
+        ConnectionArgs connection = new ConnectionArgs("127.0.0.1", 44, "1234");
+        
+    again:
+        Console.Write("Command: ");
+        var command = Console.ReadLine();
+        Console.WriteLine(Client.SendQuery(new Query(command), connection).ToString());
+        goto again;
+
+        Console.ReadKey();
     }
 }

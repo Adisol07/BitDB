@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v7.0": {
       "BitDB.ServerApp/1.0.0": {
         "dependencies": {
-          "BitDB": "1.0.0"
+          "BitDB": "1.0.0",
+          "Newtonsoft.Json": "13.0.3"
         },
         "runtime": {
           "BitDB.ServerApp.dll": {}
