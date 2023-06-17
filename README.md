@@ -5,7 +5,7 @@ Currently this project is in beta! Bugs are to be expected and new versions migh
  - Basic types: Database -> Document -> Fields -> Value
  - Simple and usefull commands, example: "GET value 'testDB/testDoc/testField'"
 
-### Latest version: "Management - 1.2.0" -> [Release page](https://github.com/Adisol07/BitDB/releases/tag/v1.2.0-beta)
+### Latest version: "Management - v1.2.0-beta" -> [Release page](https://github.com/Adisol07/BitDB/releases/tag/v1.2.0-beta)
 ### Planned features: 
  - Better encryption
  - Optimalization
