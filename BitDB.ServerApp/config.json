@@ -1,1 +1,1 @@
-{"Name":"Test","Port":44,"DataFolder":"./db","Password":"1234","MaxRequestLenght":10}
+{"Name":"Test","Port":44,"DataFolder":"./db","MaxRequestLenght":1024}

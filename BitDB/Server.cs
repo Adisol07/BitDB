@@ -14,27 +14,28 @@ public class Server
 {
     private UdpClient? server;
     private bool canListen = false;
-    private byte[] encryptionKey = null;
+    private byte[] encryptionKey;
 
     public List<Database>? Databases { get; set; }
     public int Port { get; }
     public string DataFolder { get; }
-    public string Password { get; }
     public int MaxRequestLenght { get; set; }
     public bool ShowEncryptedMessage { get; set; } = false;
+    public Dictionary<string, List<string>> Users { get; set; }
 
-    public Server(string dataFolder = "./db", int port = 44, string password = "", int maxRequestLenght = 1024)
+    public Server(string dataFolder = "./db", int port = 44, int maxRequestLenght = 1024)
     {
         this.DataFolder = dataFolder;
         this.Port = port;
-        this.Password = password;
         this.Databases = new List<Database>();
+        this.Users = new Dictionary<string, List<string>>();
         this.MaxRequestLenght = maxRequestLenght;
         using (Aes aes = Aes.Create())
         {
             aes.GenerateKey();
             encryptionKey = aes.Key;
         }
+        File.WriteAllText("./currentEncryptionKey.txt", Convert.ToBase64String(encryptionKey));
     }
 
     public void Start()
@@ -85,7 +86,7 @@ public class Server
             File.WriteAllText(dataFolder + "/" + db.ID + ".json", json);
         }
     }
-    public Response HandleCommand(string cmd)
+    public Response HandleCommand(string cmd, Auth currentUser)
     {
         Response response = new Response("Could not fetch request");
         string[] words = cmd.Split(' ');
@@ -93,6 +94,12 @@ public class Server
         Console.WriteLine("Handling command: '" + cmd + "'");
         if (words[0] == "MAKE" || words[0] == "CREATE")
         {
+            if (Users[currentUser.User + ";" + currentUser.Password].Contains("create") == false)
+            {
+                response = new Response("You don't have permission to create item!");
+                return response;
+            }
+
             if (words[1].ToLower() == "database" || words[1].ToLower() == "db")
             {
                 MatchCollection matches = Regex.Matches(cmd, pattern);
@@ -101,6 +108,11 @@ public class Server
                 if (name.Length > 100)
                 {
                     response = new Response("Name of the database is too long (>100)");
+                    return response;
+                }
+                else if (name.Length < 1)
+                {
+                    response = new Response("Name of the database is too short (<1)");
                     return response;
                 }
                 Database database = new Database(name);
@@ -119,6 +131,11 @@ public class Server
                 if (name.Length > 100)
                 {
                     response = new Response("Name of the document is too long (>100)");
+                    return response;
+                }
+                else if (name.Length < 1)
+                {
+                    response = new Response("Name of the document is too short (<1)");
                     return response;
                 }
                 Document document = new Document(name);
@@ -146,6 +163,11 @@ public class Server
                 if (name.Length > 100)
                 {
                     response = new Response("Name of the field is too long (>100)");
+                    return response;
+                }
+                else if (name.Length < 1)
+                {
+                    response = new Response("Name of the field is too short (<1)");
                     return response;
                 }
                 string value = null;
@@ -192,6 +214,12 @@ public class Server
         }
         else if (words[0] == "SET" || words[0] == "CHANGE" || words[0] == "INSERT")
         {
+            if (Users[currentUser.User + ";" + currentUser.Password].Contains("set") == false)
+            {
+                response = new Response("You don't have permission to set item!");
+                return response;
+            }
+
             MatchCollection matches = Regex.Matches(cmd, pattern);
             response = new Response("Could not find subitem");
             string[] path = matches[0].Value.Replace("'", "").Split('/');
@@ -199,6 +227,11 @@ public class Server
             if (words[1].ToLower() == "name" && val.Length > 100)
             {
                 response = new Response("New name is too long (>100)");
+                return response;
+            }
+            else if (words[1].ToLower() == "name" && val.Length < 1)
+            {
+                response = new Response("New name is too short (<1)");
                 return response;
             }
             else if (words[1].ToLower() == "value" && val.Length > MaxRequestLenght)
@@ -317,6 +350,12 @@ public class Server
         }
         else if (words[0] == "GET" || words[0] == "FETCH" || words[0] == "GRAB")
         {
+            if (Users[currentUser.User + ";" + currentUser.Password].Contains("get") == false)
+            {
+                response = new Response("You don't have permission to get item!");
+                return response;
+            }
+
             MatchCollection matches = Regex.Matches(cmd, pattern);
             response = new Response("Could not find subitem");
             string[] path = matches[0].Value.Replace("'", "").Split('/');
@@ -468,6 +507,12 @@ public class Server
         }
         else if (words[0] == "DEL" || words[0] == "REM" || words[0] == "DELETE" || words[0] == "REMOVE")
         {
+            if (Users[currentUser.User + ";" + currentUser.Password].Contains("delete") == false)
+            {
+                response = new Response("You don't have permission to delete item!");
+                return response;
+            }
+
             MatchCollection matches = Regex.Matches(cmd, pattern);
             response = new Response("Could not find subitem");
             string[] path = matches[0].Value.Replace("'", "").Split('/');
@@ -575,6 +620,76 @@ public class Server
 
             SaveData(DataFolder);
         }
+        else if (words[0] == "MANAGE")
+        {
+            if (Users[currentUser.User + ";" + currentUser.Password].Contains("manage") == false)
+            {
+                response = new Response("You don't have permission to manage this server!");
+                return response;
+            }
+
+            if (words[1].ToLower() == "user")
+            {
+                MatchCollection matches = Regex.Matches(cmd, pattern);
+                if (matches.Count == 0)
+                {
+                    response = new Response("Successfully fetched to json your permissions!", JsonConvert.SerializeObject(Users[currentUser.User + ";" + currentUser.Password]));
+                }
+                else
+                {
+                    string username = matches[0].Value.Replace("'", "");
+                    string password = matches[1].Value.Replace("'", "");
+                    response = new Response("Successfully fetched to json users permissions!", JsonConvert.SerializeObject(Users[username + ";" + password]));
+                }
+            }
+            else if (words[1].ToLower() == "users" || words[1].ToLower() == "listusers")
+            {
+                response = new Response("Successfully fetched to json list of users!", JsonConvert.SerializeObject(Users));
+            }
+            else if (words[1].ToLower() == "adduser")
+            {
+                MatchCollection matches = Regex.Matches(cmd, pattern);
+                string username = matches[0].Value.Replace("'", "");
+                string password = matches[1].Value.Replace("'", "");
+                string[] permissions = matches[2].Value.Replace("'", "").Split(";");
+                Users.Add(username + ";" + password, permissions.ToList());
+                File.WriteAllText("./users.json", JsonConvert.SerializeObject(Users));
+                response = new Response("Successfully added new user!");
+            }
+            else if (words[1].ToLower() == "removeuser" || words[1].ToLower() == "remuser")
+            {
+                MatchCollection matches = Regex.Matches(cmd, pattern);
+                string username = matches[0].Value.Replace("'", "");
+                string password = matches[1].Value.Replace("'", "");
+                Users.Remove(username + ";" + password);
+                File.WriteAllText("./users.json", JsonConvert.SerializeObject(Users));
+                response = new Response("Successfully removed user!");
+            }
+            else if (words[1].ToLower() == "addpermission" || words[1].ToLower() == "addperm")
+            {
+                MatchCollection matches = Regex.Matches(cmd, pattern);
+                string username = matches[0].Value.Replace("'", "");
+                string password = matches[1].Value.Replace("'", "");
+                string[] permissions = matches[2].Value.Replace("'", "").Split(";");
+                Users[username + ";" + password].AddRange(permissions);
+                File.WriteAllText("./users.json", JsonConvert.SerializeObject(Users));
+                response = new Response("Successfully added permissions to user!");
+            }
+            else if (words[1].ToLower() == "removepermission" || words[1].ToLower() == "remperm")
+            {
+                MatchCollection matches = Regex.Matches(cmd, pattern);
+                string username = matches[0].Value.Replace("'", "");
+                string password = matches[1].Value.Replace("'", "");
+                string permission = matches[2].Value.Replace("'", "");
+                Users[username + ";" + password].Remove(permission);
+                File.WriteAllText("./users.json", JsonConvert.SerializeObject(Users));
+                response = new Response("Successfully removed permission from user!");
+            }
+            else
+            {
+                response = new Response("Invalid argument");
+            }
+        }
         else
         {
             response = new Response("Invalid command");
@@ -592,16 +707,16 @@ public class Server
             if (ShowEncryptedMessage)
                 Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + Encoding.Unicode.GetString(receivedData) + "'");
 
-            if (Encoding.Unicode.GetString(receivedData) == "GET-ENCRYPTIONKEY")
+            if (Encoding.Unicode.GetString(receivedData) == "GET-PUBLICKEY")
             {
-                Console.WriteLine("Sending encryption key to: '" + clientEndpoint.Address + ":" + clientEndpoint.Port + "'");
+                Console.WriteLine("Sending public encryption key to: '" + clientEndpoint.Address + ":" + clientEndpoint.Port + "'");
                 Response response = new Response("SUCCESS", Convert.ToBase64String(encryptionKey));
                 byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
                 server.Send(responseData, responseData.Length, clientEndpoint);
                 continue;
             }
 
-            string password = "";
+            Auth clientAuth = null;
             string finalMessage = "";
             using (Aes aes = Aes.Create())
             {
@@ -611,14 +726,14 @@ public class Server
                 ICryptoTransform decryptor = aes.CreateDecryptor();
                 byte[] decryptedBytes = decryptor.TransformFinalBlock(receivedData, 0, receivedData.Length);
                 finalMessage = Encoding.Unicode.GetString(decryptedBytes);
-                Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received decrypted message: '" + finalMessage + "'");
             }
             if (finalMessage.StartsWith("#"))
             {
                 MatchCollection matches = Regex.Matches(finalMessage, "#(.*?)#");
-                password = matches[0].Value.Replace("#", "");
+                clientAuth = JsonConvert.DeserializeObject<Auth>(matches[0].Value.Replace("#", ""));
                 finalMessage = finalMessage.Remove(0, matches[0].Value.Length);
-            }
+            }      
+            Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "(" + clientAuth.User + ")]: Received" + (ShowEncryptedMessage ? " decrypted" : "") + " message: '" + finalMessage + "'");
             try
             {
                 if (finalMessage.StartsWith("{") && finalMessage.EndsWith("}"))
@@ -626,13 +741,13 @@ public class Server
                     QueryResponse response = new QueryResponse("Invalid query");
 
                     Query query = JsonConvert.DeserializeObject<Query>(finalMessage);
-                    if (this.Password == password || this.Password == "")
+                    if (Users.ContainsKey(clientAuth.User + ";" + clientAuth.Password))
                     {
                         Console.WriteLine("Fetching query: '" + query.ID + "'");
                         int fetched = 0;
                         foreach (string command in query.Commands)
                         {
-                            Response r = HandleCommand(command);
+                            Response r = HandleCommand(command, clientAuth);
                             fetched++;
                             response.Responses.Add(r);
                         }
@@ -640,30 +755,50 @@ public class Server
                     }
                     else
                     {
-                        Console.WriteLine("Request: '" + query.ID + "' was denied because of invalid password!");
-                        response.Message = "Invalid password";
+                        Console.WriteLine("Request: '" + query.ID + "' was denied because of invalid client auth!");
+                        response.Message = "Invalid client auth";
                     }
 
                     response.RequestDuration = query.Time - DateTime.Now;
-                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    //byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = null;
+                    using (Aes aes = Aes.Create())
+                    {
+                        aes.Key = encryptionKey;
+                        aes.Mode = CipherMode.ECB;
+                        aes.Padding = PaddingMode.PKCS7;
+                        ICryptoTransform encryptor = aes.CreateEncryptor();
+                        byte[] dataBytes = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                        responseData = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+                    }
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
                 else
                 {
                     Response response = new Response("Could not fetch request");
 
-                    if (this.Password == password || this.Password == "")
+                    if (Users.ContainsKey(clientAuth.User + ";" + clientAuth.Password))
                     {
                         Console.WriteLine("Fetching command: '" + finalMessage + "'");
-                        response = HandleCommand(finalMessage);
+                        response = HandleCommand(finalMessage, clientAuth);
                     }
                     else
                     {
-                        Console.WriteLine("Command: '" + finalMessage + "' was denied because of invalid password!");
-                        response.Message = "Invalid password";
+                        Console.WriteLine("Command: '" + finalMessage + "' was denied because of invalid client auth!");
+                        response.Message = "Invalid client auth";
                     }
 
-                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    //byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = null;
+                    using (Aes aes = Aes.Create())
+                    {
+                        aes.Key = encryptionKey;
+                        aes.Mode = CipherMode.ECB;
+                        aes.Padding = PaddingMode.PKCS7;
+                        ICryptoTransform encryptor = aes.CreateEncryptor();
+                        byte[] dataBytes = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                        responseData = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+                    }
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
             }
@@ -674,13 +809,33 @@ public class Server
                 if (finalMessage.StartsWith("{") && finalMessage.EndsWith("}"))
                 {
                     QueryResponse response = new QueryResponse("An error occurred while fetching your request");
-                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    //byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = null;
+                    using (Aes aes = Aes.Create())
+                    {
+                        aes.Key = encryptionKey;
+                        aes.Mode = CipherMode.ECB;
+                        aes.Padding = PaddingMode.PKCS7;
+                        ICryptoTransform encryptor = aes.CreateEncryptor();
+                        byte[] dataBytes = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                        responseData = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+                    }
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
                 else
                 {
                     Response response = new Response("An error occurred while fetching your request");
-                    byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    //byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                    byte[] responseData = null;
+                    using (Aes aes = Aes.Create())
+                    {
+                        aes.Key = encryptionKey;
+                        aes.Mode = CipherMode.ECB;
+                        aes.Padding = PaddingMode.PKCS7;
+                        ICryptoTransform encryptor = aes.CreateEncryptor();
+                        byte[] dataBytes = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                        responseData = encryptor.TransformFinalBlock(dataBytes, 0, dataBytes.Length);
+                    }
                     server.Send(responseData, responseData.Length, clientEndpoint);
                 }
             }
