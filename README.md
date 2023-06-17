@@ -8,7 +8,3 @@ Currently this project is in beta! Bugs are to be expected and new versions migh
 ### Latest version: "Clean up - 1.1.0" -> [Release page](https://github.com/Adisol07/BitDB/releases/tag/v1.1.0-beta)
 
 ### Basic commands: -> [List of commands](https://github.com/Adisol07/BitDB/wiki/List-of-commands)
- - GET -> get value or name based on path
- - SET -> set value of name based on path
- - CREATE -> creates new item based on first argument and path
- - DELETE -> deletes item based on path
