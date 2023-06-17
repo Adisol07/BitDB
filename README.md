@@ -6,5 +6,10 @@ Currently this project is in beta! Bugs are to be expected and new versions migh
  - Simple and usefull commands, example: "GET value 'testDB/testDoc/testField'"
 
 ### Latest version: "Clean up - 1.1.0" -> [Release page](https://github.com/Adisol07/BitDB/releases/tag/v1.1.0-beta)
+### Planned features: 
+ - Better authentification -> Encryption, users, ...
+ - Optimalization
+ - Infinite nesting of documents
+ - Functions -> Code that can run server-side (unsettled)
 
 ### Basic commands: -> [List of commands](https://github.com/Adisol07/BitDB/wiki/List-of-commands)
