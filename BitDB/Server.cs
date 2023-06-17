@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace BitDB;
 
@@ -13,12 +14,14 @@ public class Server
 {
     private UdpClient? server;
     private bool canListen = false;
+    private byte[] encryptionKey = null;
 
     public List<Database>? Databases { get; set; }
     public int Port { get; }
     public string DataFolder { get; }
     public string Password { get; }
     public int MaxRequestLenght { get; set; }
+    public bool ShowEncryptedMessage { get; set; } = false;
 
     public Server(string dataFolder = "./db", int port = 44, string password = "", int maxRequestLenght = 1024)
     {
@@ -27,6 +30,11 @@ public class Server
         this.Password = password;
         this.Databases = new List<Database>();
         this.MaxRequestLenght = maxRequestLenght;
+        using (Aes aes = Aes.Create())
+        {
+            aes.GenerateKey();
+            encryptionKey = aes.Key;
+        }
     }
 
     public void Start()
@@ -581,15 +589,35 @@ public class Server
         {
             IPEndPoint clientEndpoint = new IPEndPoint(IPAddress.Any, 0);
             byte[] receivedData = server.Receive(ref clientEndpoint);
-            string receivedMessage = Encoding.Unicode.GetString(receivedData);
-            Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + receivedMessage + "'");
-            string password = "";
-            string finalMessage = receivedMessage;
-            if (receivedMessage.StartsWith("#"))
+            if (ShowEncryptedMessage)
+                Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received message: '" + Encoding.Unicode.GetString(receivedData) + "'");
+
+            if (Encoding.Unicode.GetString(receivedData) == "GET-ENCRYPTIONKEY")
             {
-                MatchCollection matches = Regex.Matches(receivedMessage, "#(.*?)#");
+                Console.WriteLine("Sending encryption key to: '" + clientEndpoint.Address + ":" + clientEndpoint.Port + "'");
+                Response response = new Response("SUCCESS", Convert.ToBase64String(encryptionKey));
+                byte[] responseData = Encoding.Unicode.GetBytes(JsonConvert.SerializeObject(response));
+                server.Send(responseData, responseData.Length, clientEndpoint);
+                continue;
+            }
+
+            string password = "";
+            string finalMessage = "";
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = encryptionKey;
+                aes.Mode = CipherMode.ECB;
+                aes.Padding = PaddingMode.PKCS7;
+                ICryptoTransform decryptor = aes.CreateDecryptor();
+                byte[] decryptedBytes = decryptor.TransformFinalBlock(receivedData, 0, receivedData.Length);
+                finalMessage = Encoding.Unicode.GetString(decryptedBytes);
+                Console.WriteLine("[" + clientEndpoint.Address + ":" + clientEndpoint.Port + "]: Received decrypted message: '" + finalMessage + "'");
+            }
+            if (finalMessage.StartsWith("#"))
+            {
+                MatchCollection matches = Regex.Matches(finalMessage, "#(.*?)#");
                 password = matches[0].Value.Replace("#", "");
-                finalMessage = receivedMessage.Remove(0, matches[0].Value.Length);
+                finalMessage = finalMessage.Remove(0, matches[0].Value.Length);
             }
             try
             {
