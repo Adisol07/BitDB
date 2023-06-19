@@ -6,7 +6,7 @@ Currently this project is in beta! Bugs are to be expected and new versions migh
  - Simple and usefull commands, example: "GET value 'testDB/testDoc/testField'"
 
 ### Latest version: "Management - v1.2.0-beta" -> [Release page](https://github.com/Adisol07/BitDB/releases/tag/v1.2.0-beta)
-### Planned features: 
+### Planned features: -> [BitDB Plans](https://github.com/users/Adisol07/projects/1)
  - Better encryption
  - Optimalization
  - Infinite nesting of documents
